@@ -1,6 +1,6 @@
-import MySQL from '../../../src/parser/mysql';
-import { MySqlParserVisitor } from '../../../src/lib/mysql/MySqlParserVisitor';
-import { AbstractParseTreeVisitor } from 'antlr4ts/tree';
+import MySQL from 'src/parser/mysql';
+import { MySqlParserVisitor } from 'src/lib/mysql/MySqlParserVisitor';
+import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor';
 
 describe('MySQL Visitor Tests', () => {
     const expectTableName = 'user1';

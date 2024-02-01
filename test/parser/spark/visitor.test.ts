@@ -1,6 +1,6 @@
+import SparkSQL from 'src/parser/spark';
+import { SparkSqlParserVisitor } from 'src/lib/spark/SparkSqlParserVisitor';
 import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor';
-import { SparkSqlParserVisitor } from '../../../src/lib/spark/SparkSqlParserVisitor';
-import SparkSQL from '../../../src/parser/spark';
 
 describe('Spark SQL Visitor Tests', () => {
     const expectTableName = 'user1';

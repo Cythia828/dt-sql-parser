@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import { CaretPosition } from '../../../../src/parser/common/basic-parser-types';
-import TrinoSQL from '../../../../src/parser/trinosql';
-import { commentOtherLine } from '../../../helper';
+import TrinoSQL from 'src/parser/trinosql';
+import { CaretPosition } from 'src/parser/common/basic-parser-types';
+import { commentOtherLine } from 'test/helper';
 
 const tokenSql = fs.readFileSync(path.join(__dirname, 'fixtures', 'tokenSuggestion.sql'), 'utf-8');
 
@@ -14,7 +14,10 @@ describe('Trino SQL Token Suggestion', () => {
             lineNumber: 1,
             column: 7,
         };
-        const suggestion = parser.getSuggestionAtCaretPosition(tokenSql, pos)?.keywords;
+        const suggestion = parser.getSuggestionAtCaretPosition(
+            commentOtherLine(tokenSql, pos.lineNumber),
+            pos
+        )?.keywords;
 
         expect(suggestion).toEqual(['VIEW', 'MATERIALIZED', 'TABLE', 'SCHEMA']);
     });

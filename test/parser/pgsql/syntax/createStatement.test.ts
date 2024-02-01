@@ -1,7 +1,7 @@
-import PgSQL from '../../../../src/parser/pgsql';
-import { readSQL } from '../../../helper';
+import PostgresSQL from 'src/parser/pgsql';
+import { readSQL } from 'test/helper';
 
-const parser = new PgSQL();
+const parser = new PostgresSQL();
 
 const features = {
     creates: readSQL(__dirname, 'create.sql'),

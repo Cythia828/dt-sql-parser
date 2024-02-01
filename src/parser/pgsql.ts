@@ -1,7 +1,7 @@
 import { Token } from 'antlr4ts';
 import { CandidatesCollection } from 'antlr4-c3';
 import { PostgreSQLLexer } from '../lib/pgsql/PostgreSQLLexer';
-import { PostgreSQLParser, ProgramContext, StmtContext } from '../lib/pgsql/PostgreSQLParser';
+import { PostgreSQLParser, ProgramContext, SingleStmtContext } from '../lib/pgsql/PostgreSQLParser';
 import BasicParser from './common/basicParser';
 import { PostgreSQLParserListener } from '../lib/pgsql/PostgreSQLParserListener';
 import { SyntaxContextType, Suggestions, SyntaxSuggestion } from './common/basic-parser-types';
@@ -11,7 +11,7 @@ export default class PostgresSQL extends BasicParser<
     ProgramContext,
     PostgreSQLParser
 > {
-    protected createLexerFormCharStream(charStreams) {
+    protected createLexerFromCharStream(charStreams) {
         const lexer = new PostgreSQLLexer(charStreams);
         return lexer;
     }
@@ -33,6 +33,8 @@ export default class PostgresSQL extends BasicParser<
         PostgreSQLParser.RULE_database_name, // database name
         PostgreSQLParser.RULE_procedure_name_create, // procedure name that will be created
         PostgreSQLParser.RULE_procedure_name, // procedure name
+        PostgreSQLParser.RULE_column_name_create, // column name that will be created
+        PostgreSQLParser.RULE_column_name, // column name
     ]);
 
     protected get splitListener() {
@@ -105,6 +107,14 @@ export default class PostgresSQL extends BasicParser<
                     syntaxContextType = SyntaxContextType.PROCEDURE;
                     break;
                 }
+                case PostgreSQLParser.RULE_column_name_create: {
+                    syntaxContextType = SyntaxContextType.COLUMN_CREATE;
+                    break;
+                }
+                case PostgreSQLParser.RULE_column_name: {
+                    syntaxContextType = SyntaxContextType.COLUMN;
+                    break;
+                }
                 default:
                     break;
             }
@@ -136,15 +146,15 @@ export default class PostgresSQL extends BasicParser<
 }
 
 export class PgSqlSplitListener implements PostgreSQLParserListener {
-    private _statementContext: ProgramContext[] = [];
+    private _statementsContext: SingleStmtContext[] = [];
 
-    enterProgram = (ctx: ProgramContext) => {
-        this._statementContext.push(ctx);
+    exitSingleStmt = (ctx: SingleStmtContext) => {
+        this._statementsContext.push(ctx);
     };
 
-    exitProgram = (ctx: ProgramContext) => {};
+    enterSingleStmt = (ctx: SingleStmtContext) => {};
 
     get statementsContext() {
-        return this._statementContext;
+        return this._statementsContext;
     }
 }

@@ -4,15 +4,14 @@ import { FlinkSqlLexer } from '../lib/flinksql/FlinkSqlLexer';
 import {
     FlinkSqlParser,
     ProgramContext,
-    SqlStatementContext,
-    SqlStatementsContext,
+    SingleStatementContext,
 } from '../lib/flinksql/FlinkSqlParser';
 import { FlinkSqlParserListener } from '../lib/flinksql/FlinkSqlParserListener';
 import { SyntaxContextType, Suggestions, SyntaxSuggestion } from './common/basic-parser-types';
 import BasicParser from './common/basicParser';
 
 export default class FlinkSQL extends BasicParser<FlinkSqlLexer, ProgramContext, FlinkSqlParser> {
-    protected createLexerFormCharStream(charStreams) {
+    protected createLexerFromCharStream(charStreams) {
         const lexer = new FlinkSqlLexer(charStreams);
         return lexer;
     }
@@ -32,6 +31,8 @@ export default class FlinkSQL extends BasicParser<FlinkSqlLexer, ProgramContext,
         FlinkSqlParser.RULE_viewPathCreate, // viewName that will be created
         FlinkSqlParser.RULE_functionName, // functionName
         FlinkSqlParser.RULE_functionNameCreate, // functionName that will be created
+        FlinkSqlParser.RULE_columnName,
+        FlinkSqlParser.RULE_columnNameCreate,
     ]);
 
     protected get splitListener() {
@@ -93,6 +94,14 @@ export default class FlinkSQL extends BasicParser<FlinkSqlLexer, ProgramContext,
                     syntaxContextType = SyntaxContextType.FUNCTION_CREATE;
                     break;
                 }
+                case FlinkSqlParser.RULE_columnName: {
+                    syntaxContextType = SyntaxContextType.COLUMN;
+                    break;
+                }
+                case FlinkSqlParser.RULE_columnNameCreate: {
+                    syntaxContextType = SyntaxContextType.COLUMN_CREATE;
+                    break;
+                }
                 default:
                     break;
             }
@@ -124,13 +133,13 @@ export default class FlinkSQL extends BasicParser<FlinkSqlLexer, ProgramContext,
 }
 
 export class FlinkSqlSplitListener implements FlinkSqlParserListener {
-    private _statementsContext: SqlStatementContext[] = [];
+    private _statementsContext: SingleStatementContext[] = [];
 
-    exitSqlStatement = (ctx: SqlStatementContext) => {
+    exitSingleStatement = (ctx: SingleStatementContext) => {
         this._statementsContext.push(ctx);
     };
 
-    enterSqlStatements = (ctx: SqlStatementsContext) => {};
+    enterSingleStatement = (ctx: SingleStatementContext) => {};
 
     get statementsContext() {
         return this._statementsContext;

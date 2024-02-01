@@ -1,20 +1,48 @@
-export * from './parser';
-export * from './utils';
-export * from './lib/flinksql/FlinkSqlParserListener';
-export * from './lib/flinksql/FlinkSqlParserVisitor';
-export * from './lib/mysql/MySqlParserVisitor';
-export * from './lib/mysql/MySqlParserListener';
-export * from './lib/hive/HiveSqlParserListener';
-export * from './lib/hive/HiveSqlParserVisitor';
-export * from './lib/plsql/PlSqlParserListener';
-export * from './lib/plsql/PlSqlParserVisitor';
-export * from './lib/spark/SparkSqlParserVisitor';
-export * from './lib/spark/SparkSqlParserListener';
-export * from './lib/pgsql/PostgreSQLParserListener';
-export * from './lib/pgsql/PostgreSQLParserVisitor';
-export * from './lib/trinosql/TrinoSqlListener';
-export * from './lib/trinosql/TrinoSqlVisitor';
+export { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor';
+
+export {
+    MySQL,
+    FlinkSQL,
+    SparkSQL,
+    HiveSQL,
+    PostgresSQL,
+    TrinoSQL,
+    ImpalaSQL,
+    PLSQL,
+} from './parser';
+
+export type {
+    MySqlParserListener,
+    MySqlParserVisitor,
+    FlinkSqlParserListener,
+    FlinkSqlParserVisitor,
+    SparkSqlParserListener,
+    SparkSqlParserVisitor,
+    HiveSqlParserListener,
+    HiveSqlParserVisitor,
+    PlSqlParserListener,
+    PlSqlParserVisitor,
+    PostgreSQLParserListener,
+    PostgreSQLParserVisitor,
+    TrinoSqlListener,
+    TrinoSqlVisitor,
+    ImpalaSqlParserListener,
+    ImpalaSqlParserVisitor,
+} from './lib';
+
 export { SyntaxContextType } from './parser/common/basic-parser-types';
 
-export type * from './parser/common/basic-parser-types';
-export type { SyntaxError, ParseError, ErrorHandler } from './parser/common/parseErrorListener';
+export type {
+    CaretPosition,
+    WordRange,
+    Suggestions,
+    SyntaxSuggestion,
+    TextSlice,
+} from './parser/common/basic-parser-types';
+
+export type { SyntaxError, ParseError, ErrorListener } from './parser/common/parseErrorListener';
+
+/**
+ * @deprecated legacy, will be removed.
+ */
+export * from './utils';

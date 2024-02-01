@@ -4,18 +4,19 @@ const fs = require('fs');
 const argv = require('yargs-parser')(process.argv.slice(2));
 const inquirer = require('inquirer');
 const chalk = require('chalk');
+const { cleanComment } = require('./cleanComment');
 
 const grammarsPath = path.resolve(__dirname, '../src/grammar');
 const outputPath = path.resolve(__dirname, '../src/lib');
 
-const languageEntries = fs.readdirSync(grammarsPath).filter((item) => item !== 'impala'); // impala is not support yet.
+const languageEntries = fs.readdirSync(grammarsPath);
 
 const baseCmd = 'antlr4ts -visitor -listener -Xexact-output-dir -o';
 
 function compile(language) {
     const cmd = `${baseCmd} ${outputPath}/${language} ${grammarsPath}/${language}/*.g4`;
 
-    if (fs.existsSync(`${outputPath}/${language}`)) {
+    if (language !== 'plsql' && fs.existsSync(`${outputPath}/${language}`)) {
         console.info(chalk.green(`\nRemoving:`, chalk.gray(`${outputPath}/${language}/*`)));
         fs.rmSync(`${outputPath}/${language}`, { recursive: true });
     }
@@ -29,7 +30,8 @@ function compile(language) {
                 chalk.gray(err)
             );
         } else {
-            console.log(chalk.greenBright(`\nCompile ${language} succeeded!`));
+            cleanComment(language);
+            console.log(chalk.greenBright(`Compile ${language} succeeded!`));
         }
     });
 }

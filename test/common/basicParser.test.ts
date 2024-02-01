@@ -1,6 +1,7 @@
+import FlinkSQL from 'src/parser/flinksql';
+import { FlinkSqlLexer } from 'src/lib/flinksql/FlinkSqlLexer';
+import { ErrorListener } from 'src/parser/common/parseErrorListener';
 import { CommonTokenStream } from 'antlr4ts';
-import { ErrorHandler, FlinkSQL } from '../../src';
-import { FlinkSqlLexer } from '../../src/lib/flinksql/FlinkSqlLexer';
 
 describe('BasicParser unit tests', () => {
     const flinkParser = new FlinkSQL();
@@ -12,13 +13,13 @@ describe('BasicParser unit tests', () => {
         expect(lexer).not.toBeNull();
     });
 
-    test('Create lexer with errorHandler', () => {
+    test('Create lexer with errorListener', () => {
         const sql = '袋鼠云数栈UED团队';
         const errors: any[] = [];
-        const errorHandler: ErrorHandler<any> = (err) => {
+        const errorListener: ErrorListener<any> = (err) => {
             errors.push(err);
         };
-        const lexer = flinkParser.createLexer(sql, errorHandler);
+        const lexer = flinkParser.createLexer(sql, errorListener);
         const tokenStream = new CommonTokenStream(lexer);
         tokenStream.fill();
         expect(errors.length).not.toBe(0);
@@ -32,24 +33,24 @@ describe('BasicParser unit tests', () => {
         expect(parser).not.toBeNull();
     });
 
-    test('Create parser with errorHandler (lexer error)', () => {
+    test('Create parser with errorListener (lexer error)', () => {
         const sql = '袋鼠云数栈UED团队';
         const errors: any[] = [];
-        const errorHandler: ErrorHandler<any> = (err) => {
+        const errorListener: ErrorListener<any> = (err) => {
             errors.push(err);
         };
-        const parser = flinkParser.createParser(sql, errorHandler);
+        const parser = flinkParser.createParser(sql, errorListener);
         parser.program();
         expect(errors.length).not.toBe(0);
     });
 
-    test('Create parser with errorHandler (parse error)', () => {
+    test('Create parser with errorListener (parse error)', () => {
         const sql = 'SHOW TA';
         const errors: any[] = [];
-        const errorHandler: ErrorHandler<any> = (err) => {
+        const errorListener: ErrorListener<any> = (err) => {
             errors.push(err);
         };
-        const parser = flinkParser.createParser(sql, errorHandler);
+        const parser = flinkParser.createParser(sql, errorListener);
         parser.program();
         expect(errors.length).not.toBe(0);
     });
@@ -57,10 +58,10 @@ describe('BasicParser unit tests', () => {
     test('Parse right input', () => {
         const sql = 'SELECT * FROM tb1';
         const errors: any[] = [];
-        const errorHandler: ErrorHandler<any> = (err) => {
+        const errorListener: ErrorListener<any> = (err) => {
             errors.push(err);
         };
-        const parseTree = flinkParser.parse(sql, errorHandler);
+        const parseTree = flinkParser.parse(sql, errorListener);
 
         expect(parseTree).not.toBeUndefined();
         expect(parseTree).not.toBeNull();
@@ -70,10 +71,10 @@ describe('BasicParser unit tests', () => {
     test('Parse wrong input', () => {
         const sql = '袋鼠云数栈UED团队';
         const errors: any[] = [];
-        const errorHandler: ErrorHandler<any> = (err) => {
+        const errorListener: ErrorListener<any> = (err) => {
             errors.push(err);
         };
-        const parseTree = flinkParser.parse(sql, errorHandler);
+        const parseTree = flinkParser.parse(sql, errorListener);
 
         expect(parseTree).not.toBeUndefined();
         expect(parseTree).not.toBeNull();

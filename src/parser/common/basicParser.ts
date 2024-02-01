@@ -9,7 +9,7 @@ import {
 } from 'antlr4ts';
 import { ParseTreeWalker, ParseTreeListener } from 'antlr4ts/tree';
 import { CandidatesCollection, CodeCompletionCore } from 'antlr4-c3';
-import { findCaretTokenIndex } from '../../utils/findCaretTokenIndex';
+import { findCaretTokenIndex } from './utils/findCaretTokenIndex';
 import {
     CaretPosition,
     Suggestions,
@@ -17,7 +17,8 @@ import {
     WordRange,
     TextSlice,
 } from './basic-parser-types';
-import ParseErrorListener, { ParseError, ErrorHandler } from './parseErrorListener';
+import ParseErrorListener, { ParseError, ErrorListener } from './parseErrorListener';
+import { ErrorStrategy } from './errorStrategy';
 
 interface IParser<IParserRuleContext extends ParserRuleContext> extends Parser {
     // Customized in our parser
@@ -46,7 +47,7 @@ export default abstract class BasicParser<
     protected _parseErrors: ParseError[] = [];
     /** members for cache end */
 
-    private _errorHandler: ErrorHandler<any> = (error) => {
+    private _errorListener: ErrorListener<any> = (error) => {
         this._parseErrors.push(error);
     };
 
@@ -59,7 +60,7 @@ export default abstract class BasicParser<
      * Create a antlr4 Lexer instance.
      * @param input source string
      */
-    protected abstract createLexerFormCharStream(charStreams: CodePointCharStream): L;
+    protected abstract createLexerFromCharStream(charStreams: CodePointCharStream): L;
 
     /**
      * Create Parser by CommonTokenStream
@@ -90,9 +91,9 @@ export default abstract class BasicParser<
      * Create an antlr4 lexer from input.
      * @param input string
      */
-    public createLexer(input: string, errorListener?: ErrorHandler<any>) {
+    public createLexer(input: string, errorListener?: ErrorListener<any>) {
         const charStreams = CharStreams.fromString(input.toUpperCase());
-        const lexer = this.createLexerFormCharStream(charStreams);
+        const lexer = this.createLexerFromCharStream(charStreams);
         if (errorListener) {
             lexer.removeErrorListeners();
             lexer.addErrorListener(new ParseErrorListener(errorListener));
@@ -104,7 +105,7 @@ export default abstract class BasicParser<
      * Create an antlr4 parser from input.
      * @param input string
      */
-    public createParser(input: string, errorListener?: ErrorHandler<any>) {
+    public createParser(input: string, errorListener?: ErrorListener<any>) {
         const lexer = this.createLexer(input, errorListener);
         const tokenStream = new CommonTokenStream(lexer);
         const parser = this.createParserFromTokenStream(tokenStream);
@@ -123,9 +124,10 @@ export default abstract class BasicParser<
      * @param errorListener listen parse errors and lexer errors.
      * @returns parseTree
      */
-    public parse(input: string, errorListener?: ErrorHandler<any>) {
+    public parse(input: string, errorListener?: ErrorListener<any>) {
         const parser = this.createParser(input, errorListener);
         parser.buildParseTree = true;
+        parser.errorHandler = new ErrorStrategy();
 
         return parser.program();
     }
@@ -138,10 +140,10 @@ export default abstract class BasicParser<
     private createParserWithCache(input: string): P {
         this._parseTree = null;
         this._charStreams = CharStreams.fromString(input.toUpperCase());
-        this._lexer = this.createLexerFormCharStream(this._charStreams);
+        this._lexer = this.createLexerFromCharStream(this._charStreams);
 
         this._lexer.removeErrorListeners();
-        this._lexer.addErrorListener(new ParseErrorListener(this._errorHandler));
+        this._lexer.addErrorListener(new ParseErrorListener(this._errorListener));
 
         this._tokenStream = new CommonTokenStream(this._lexer);
         /**
@@ -153,6 +155,7 @@ export default abstract class BasicParser<
 
         this._parser = this.createParserFromTokenStream(this._tokenStream);
         this._parser.buildParseTree = true;
+        this._parser.errorHandler = new ErrorStrategy();
 
         return this._parser;
     }
@@ -165,7 +168,7 @@ export default abstract class BasicParser<
      * @param errorListener listen errors
      * @returns parseTree
      */
-    private parseWithCache(input: string, errorListener?: ErrorHandler<any>) {
+    private parseWithCache(input: string, errorListener?: ErrorListener<any>) {
         // Avoid parsing the same input repeatedly.
         if (this._parsedInput === input && !errorListener) {
             return this._parseTree;
@@ -175,7 +178,7 @@ export default abstract class BasicParser<
         this._parsedInput = input;
 
         parser.removeErrorListeners();
-        parser.addErrorListener(new ParseErrorListener(this._errorHandler));
+        parser.addErrorListener(new ParseErrorListener(this._errorListener));
 
         this._parseTree = parser.program();
 
@@ -241,7 +244,7 @@ export default abstract class BasicParser<
                 startLine: start.line,
                 endLine: stop.line,
                 startColumn: start.charPositionInLine + 1,
-                endColumn: stop.charPositionInLine + stop.text.length,
+                endColumn: stop.charPositionInLine + 1 + stop.text.length,
                 text: this._parsedInput.slice(start.startIndex, stop.stopIndex + 1),
             };
         });
@@ -274,54 +277,74 @@ export default abstract class BasicParser<
 
         /**
          * Split sql by statement.
-         * Try to collect candidates from the caret statement only.
+         * Try to collect candidates in as small a range as possible.
          */
         this.listen(splitListener, this._parseTree);
+        const statementCount = splitListener.statementsContext?.length;
+        const statementsContext = splitListener.statementsContext;
 
         // If there are multiple statements.
-        if (splitListener.statementsContext.length > 1) {
-            // find statement rule context where caretPosition is located.
-            const caretStatementContext = splitListener?.statementsContext.find((ctx) => {
-                return (
-                    caretTokenIndex <= ctx.stop?.tokenIndex &&
-                    caretTokenIndex >= ctx.start.tokenIndex
-                );
-            });
+        if (statementCount > 1) {
+            /**
+             * Find a minimum valid range, reparse the fragment, and provide a new parse tree to C3.
+             * The boundaries of this range must be statements with no syntax errors.
+             * This can ensure the stable performance of the C3.
+             */
+            let startStatement: ParserRuleContext;
+            let stopStatement: ParserRuleContext;
 
-            if (caretStatementContext) {
-                c3Context = caretStatementContext;
-            } else {
-                const lastStatementToken =
-                    splitListener.statementsContext[splitListener?.statementsContext.length - 1]
-                        .start;
+            for (let index = 0; index < statementCount; index++) {
+                const ctx = statementsContext[index];
+                const isCurrentCtxValid = !ctx.exception;
+                if (!isCurrentCtxValid) continue;
+
                 /**
-                 * If caretStatementContext is not found and it follows all statements.
-                 * Reparses part of the input following the penultimate statement.
-                 * And c3 will collect candidates in the new parseTreeContext.
+                 * Ensure that the statementContext before the left boundary
+                 * and the last statementContext on the right boundary are qualified SQL statements.
                  */
-                if (caretTokenIndex > lastStatementToken?.tokenIndex) {
-                    /**
-                     * Save offset of the tokenIndex in the partInput
-                     * compared to the tokenIndex in the whole input
-                     */
-                    tokenIndexOffset = lastStatementToken?.tokenIndex;
-                    // Correct caretTokenIndex
-                    caretTokenIndex = caretTokenIndex - tokenIndexOffset;
+                const isPrevCtxValid = index === 0 || !statementsContext[index - 1]?.exception;
+                const isNextCtxValid =
+                    index === statementCount - 1 || !statementsContext[index + 1]?.exception;
 
-                    const inputSlice = input.slice(lastStatementToken.startIndex);
-                    const lexer = this.createLexer(inputSlice);
-                    lexer.removeErrorListeners();
+                if (ctx.stop.tokenIndex < caretTokenIndex && isPrevCtxValid) {
+                    startStatement = ctx;
+                }
 
-                    const tokenStream = new CommonTokenStream(lexer);
-                    tokenStream.fill();
-                    const parser = this.createParserFromTokenStream(tokenStream);
-                    parser.removeErrorListeners();
-                    parser.buildParseTree = true;
-
-                    sqlParserIns = parser;
-                    c3Context = parser.program();
+                if (!stopStatement && ctx.start.tokenIndex > caretTokenIndex && isNextCtxValid) {
+                    stopStatement = ctx;
+                    break;
                 }
             }
+
+            // A boundary consisting of the index of the input.
+            const startIndex = startStatement?.start?.startIndex ?? 0;
+            const stopIndex = stopStatement?.stop?.stopIndex ?? input.length - 1;
+
+            /**
+             * Save offset of the tokenIndex in the range of input
+             * compared to the tokenIndex in the whole input
+             */
+            tokenIndexOffset = startStatement?.start?.tokenIndex ?? 0;
+            caretTokenIndex = caretTokenIndex - tokenIndexOffset;
+
+            /**
+             * Reparse the input fragment，
+             * and c3 will collect candidates in the newly generated parseTree.
+             */
+            const inputSlice = input.slice(startIndex, stopIndex);
+
+            const lexer = this.createLexer(inputSlice);
+            lexer.removeErrorListeners();
+            const tokenStream = new CommonTokenStream(lexer);
+            tokenStream.fill();
+
+            const parser = this.createParserFromTokenStream(tokenStream);
+            parser.removeErrorListeners();
+            parser.buildParseTree = true;
+            parser.errorHandler = new ErrorStrategy();
+
+            sqlParserIns = parser;
+            c3Context = parser.program();
         }
 
         const core = new CodeCompletionCore(sqlParserIns);
@@ -341,10 +364,10 @@ export default abstract class BasicParser<
                     return {
                         text: this._parsedInput.slice(token.startIndex, token.stopIndex + 1),
                         startIndex: token.startIndex,
-                        stopIndex: token.stopIndex,
+                        endIndex: token.stopIndex,
                         line: token.line,
                         startColumn: token.charPositionInLine + 1,
-                        stopColumn: token.charPositionInLine + token.text.length,
+                        stopColumn: token.charPositionInLine + 1 + token.text.length,
                     };
                 });
                 return {

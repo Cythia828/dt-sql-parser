@@ -1,5 +1,5 @@
-import MySQL from '../../../../src/parser/mysql';
-import { readSQL } from '../../../helper';
+import MySQL from 'src/parser/mysql';
+import { readSQL } from 'test/helper';
 
 const parser = new MySQL();
 
@@ -49,7 +49,7 @@ describe('MySQL DDL Syntax Tests', () => {
             it(sql, () => {
                 const result = parser.validate(sql);
                 if (result.length) {
-                    console.log(result, `\n请检查 sql: ${sql}`);
+                    console.log(result, `\nPlease check sql: ${sql}`);
                 }
                 expect(result.length).toBe(0);
             });

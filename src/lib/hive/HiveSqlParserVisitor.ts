@@ -1,4 +1,4 @@
-// Generated from /Users/hayden/Desktop/dt-works/dt-sql-parser/src/grammar/hive/HiveSqlParser.g4 by ANTLR 4.9.0-SNAPSHOT
+// Generated from dt-sql-parser/src/grammar/hive/HiveSqlParser.g4 by ANTLR 4.9.0-SNAPSHOT
 
 
 import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor";
@@ -145,6 +145,7 @@ import { ColumnNameTypeOrConstraintListContext } from "./HiveSqlParser";
 import { ColumnNameColonTypeListContext } from "./HiveSqlParser";
 import { ColumnNameListContext } from "./HiveSqlParser";
 import { ColumnNameContext } from "./HiveSqlParser";
+import { ColumnNameCreateContext } from "./HiveSqlParser";
 import { ExtColumnNameContext } from "./HiveSqlParser";
 import { ColumnNameOrderListContext } from "./HiveSqlParser";
 import { ColumnParenthesesListContext } from "./HiveSqlParser";
@@ -309,7 +310,6 @@ import { DataConnectorTypeContext } from "./HiveSqlParser";
 import { DcPropertiesContext } from "./HiveSqlParser";
 import { DropDataConnectorStatementContext } from "./HiveSqlParser";
 import { TableAllColumnsContext } from "./HiveSqlParser";
-import { TableOrColumnContext } from "./HiveSqlParser";
 import { DefaultValueContext } from "./HiveSqlParser";
 import { ExpressionListContext } from "./HiveSqlParser";
 import { AliasListContext } from "./HiveSqlParser";
@@ -1529,6 +1529,13 @@ export interface HiveSqlParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitColumnName?: (ctx: ColumnNameContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `HiveSqlParser.columnNameCreate`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitColumnNameCreate?: (ctx: ColumnNameCreateContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `HiveSqlParser.extColumnName`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -2675,13 +2682,6 @@ export interface HiveSqlParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitTableAllColumns?: (ctx: TableAllColumnsContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `HiveSqlParser.tableOrColumn`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitTableOrColumn?: (ctx: TableOrColumnContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `HiveSqlParser.defaultValue`.

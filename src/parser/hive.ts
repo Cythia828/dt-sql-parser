@@ -7,7 +7,7 @@ import { HiveSqlParserListener } from '../lib/hive/HiveSqlParserListener';
 import { SyntaxContextType, Suggestions, SyntaxSuggestion } from './common/basic-parser-types';
 
 export default class HiveSQL extends BasicParser<HiveSqlLexer, ProgramContext, HiveSqlParser> {
-    protected createLexerFormCharStream(charStreams) {
+    protected createLexerFromCharStream(charStreams) {
         const lexer = new HiveSqlLexer(charStreams);
         return lexer;
     }
@@ -26,6 +26,8 @@ export default class HiveSQL extends BasicParser<HiveSqlLexer, ProgramContext, H
         HiveSqlParser.RULE_functionNameForDDL, // function name
         HiveSqlParser.RULE_functionNameForInvoke, // function name
         HiveSqlParser.RULE_functionNameCreate, // function name that will be created
+        HiveSqlParser.RULE_columnName,
+        HiveSqlParser.RULE_columnNameCreate,
     ]);
 
     protected get splitListener() {
@@ -81,6 +83,14 @@ export default class HiveSQL extends BasicParser<HiveSqlLexer, ProgramContext, H
                 }
                 case HiveSqlParser.RULE_functionNameCreate: {
                     syntaxContextType = SyntaxContextType.FUNCTION_CREATE;
+                    break;
+                }
+                case HiveSqlParser.RULE_columnName: {
+                    syntaxContextType = SyntaxContextType.COLUMN;
+                    break;
+                }
+                case HiveSqlParser.RULE_columnNameCreate: {
+                    syntaxContextType = SyntaxContextType.COLUMN_CREATE;
                     break;
                 }
                 default:

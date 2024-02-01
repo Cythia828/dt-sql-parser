@@ -1,13 +1,17 @@
 import { Token } from 'antlr4ts';
 import { CandidatesCollection } from 'antlr4-c3';
 import { TrinoSqlLexer } from '../lib/trinosql/TrinoSqlLexer';
-import { TrinoSqlParser, ProgramContext, StatementContext } from '../lib/trinosql/TrinoSqlParser';
+import {
+    TrinoSqlParser,
+    ProgramContext,
+    SingleStatementContext,
+} from '../lib/trinosql/TrinoSqlParser';
 import { TrinoSqlListener } from '../lib/trinosql/TrinoSqlListener';
 import BasicParser from './common/basicParser';
 import { Suggestions, SyntaxContextType, SyntaxSuggestion } from './common/basic-parser-types';
 
 export default class TrinoSQL extends BasicParser<TrinoSqlLexer, ProgramContext, TrinoSqlParser> {
-    protected createLexerFormCharStream(charStreams) {
+    protected createLexerFromCharStream(charStreams) {
         const lexer = new TrinoSqlLexer(charStreams);
         return lexer;
     }
@@ -31,6 +35,8 @@ export default class TrinoSQL extends BasicParser<TrinoSqlLexer, ProgramContext,
         TrinoSqlParser.RULE_viewName,
         TrinoSqlParser.RULE_viewNameCreate,
         TrinoSqlParser.RULE_functionName,
+        TrinoSqlParser.RULE_columnName,
+        TrinoSqlParser.RULE_columnNameCreate,
     ]);
 
     protected processCandidates(
@@ -84,6 +90,14 @@ export default class TrinoSQL extends BasicParser<TrinoSqlLexer, ProgramContext,
                     syntaxContextType = SyntaxContextType.FUNCTION;
                     break;
                 }
+                case TrinoSqlParser.RULE_columnNameCreate: {
+                    syntaxContextType = SyntaxContextType.COLUMN_CREATE;
+                    break;
+                }
+                case TrinoSqlParser.RULE_columnName: {
+                    syntaxContextType = SyntaxContextType.COLUMN;
+                    break;
+                }
                 default:
                     break;
             }
@@ -115,9 +129,9 @@ export default class TrinoSQL extends BasicParser<TrinoSqlLexer, ProgramContext,
 }
 
 export class TrinoSqlSplitListener implements TrinoSqlListener {
-    private _statementsContext: StatementContext[] = [];
+    private _statementsContext: SingleStatementContext[] = [];
 
-    exitStatement = (ctx: StatementContext) => {
+    exitSingleStatement = (ctx: SingleStatementContext) => {
         this._statementsContext.push(ctx);
     };
 

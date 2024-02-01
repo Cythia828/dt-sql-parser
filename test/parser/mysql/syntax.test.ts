@@ -1,4 +1,4 @@
-import MySQL from '../../../src/parser/mysql';
+import MySQL from 'src/parser/mysql';
 
 describe('MySQL Syntax Tests', () => {
     const parser = new MySQL();
