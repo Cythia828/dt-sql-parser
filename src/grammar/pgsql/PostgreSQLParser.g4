@@ -3259,7 +3259,7 @@ from_list
 
 table_ref
     : (
-        relation_expr opt_alias_clause? tablesample_clause?
+        (relation_expr | view_relation_expr) opt_alias_clause? tablesample_clause?
         | func_table func_alias_clause?
         | xmltable opt_alias_clause?
         | select_with_parens opt_alias_clause?
@@ -3306,6 +3306,10 @@ relation_expr
     : KW_ONLY? table_name STAR? column_list? where_clause?
     | KW_ONLY ( table_name | OPEN_PAREN table_name CLOSE_PAREN)
     | KW_IN KW_SCHEMA (schema_name | KW_CURRENT_SCHEMA)
+    ;
+
+view_relation_expr
+    : KW_ONLY? view_name STAR? column_list? where_clause?
     ;
 
 publication_relation_expr

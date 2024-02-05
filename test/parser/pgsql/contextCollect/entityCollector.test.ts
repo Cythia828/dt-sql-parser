@@ -268,8 +268,8 @@ describe('PostgreSQL entity collector tests', () => {
         expect(tableCreateEntity.relatedEntities.length).toBe(1);
 
         const relatedEntity = tableCreateEntity.relatedEntities[0];
-        // expect(relatedEntity.entityContextType).toBe(EntityContextType.VIEW);
-        // expect(allEntities.some((en) => relatedEntity === en)).toBeTruthy();
+        expect(relatedEntity.entityContextType).toBe(EntityContextType.TABLE);
+        expect(allEntities.some((en) => relatedEntity === en)).toBeTruthy();
         expect(relatedEntity.text).toBe('films');
     });
 
