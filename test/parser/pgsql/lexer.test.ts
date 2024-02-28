@@ -1,4 +1,4 @@
-import PostgresSQL from 'src/parser/pgsql';
+import PostgresSQL from 'src/parser/postgre';
 
 describe('PostgresSQL Lexer tests', () => {
     const mysqlParser = new PostgresSQL();

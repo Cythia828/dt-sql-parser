@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import PostgresSQL from 'src/parser/pgsql';
+import PostgresSQL from 'src/parser/postgre';
 import { CaretPosition, EntityContextType } from 'src/parser/common/basic-parser-types';
 
 const syntaxSql = fs.readFileSync(

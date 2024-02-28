@@ -1,4 +1,4 @@
-import PostgresSQL from 'src/parser/pgsql';
+import PostgresSQL from 'src/parser/postgre';
 
 const randomText = `dhsdansdnkla ndjnsla ndnalks`;
 const unCompleteSQL = `CREATE TABLE`;

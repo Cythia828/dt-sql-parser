@@ -1,4 +1,4 @@
-import PostgresSQL from 'src/parser/pgsql';
+import PostgresSQL from 'src/parser/postgre';
 import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor';
 import { PostgreSQLParserVisitor } from 'src/lib/pgsql/PostgreSQLParserVisitor';
 

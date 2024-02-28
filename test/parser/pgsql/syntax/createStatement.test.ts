@@ -1,4 +1,4 @@
-import PostgresSQL from 'src/parser/pgsql';
+import PostgresSQL from 'src/parser/postgre';
 import { readSQL } from 'test/helper';
 
 const parser = new PostgresSQL();

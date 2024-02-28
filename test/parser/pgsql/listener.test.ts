@@ -1,4 +1,4 @@
-import PostgresSQL from 'src/parser/pgsql';
+import PostgresSQL from 'src/parser/postgre';
 import { PostgreSQLParserListener } from 'src/lib/pgsql/PostgreSQLParserListener';
 import { ParseTreeListener } from 'antlr4ts/tree/ParseTreeListener';
 
