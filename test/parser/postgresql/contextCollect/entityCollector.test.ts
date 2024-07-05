@@ -1,17 +1,19 @@
 import { ParseTreeListener } from 'antlr4ng';
 import fs from 'fs';
 import path from 'path';
-import { PostgreSqlParserListener } from 'src/lib/postgresql/PostgreSqlParserListener';
 import {
-    isCommonEntityContext,
-    isFuncEntityContext,
-    StmtContextType,
+  PostgreSqlParserListener,
+} from 'src/lib/postgresql/PostgreSqlParserListener';
+import {
+  isCommonEntityContext,
+  isFuncEntityContext,
+  StmtContextType,
 } from 'src/parser/common/entityCollector';
 import { EntityContextType } from 'src/parser/common/types';
 import {
-    PostgreSQL,
-    PostgreSqlEntityCollector,
-    PostgreSqlSplitListener,
+  PostgreSQL,
+  PostgreSqlEntityCollector,
+  PostgreSqlSplitListener,
 } from 'src/parser/postgresql';
 
 const commonSql = fs.readFileSync(path.join(__dirname, 'fixtures', 'common.sql'), 'utf-8');

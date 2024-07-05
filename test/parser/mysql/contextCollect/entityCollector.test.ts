@@ -3,12 +3,16 @@ import fs from 'fs';
 import path from 'path';
 import { MySqlParserListener } from 'src/lib/mysql/MySqlParserListener';
 import {
-    isCommonEntityContext,
-    isFuncEntityContext,
-    StmtContextType,
+  isCommonEntityContext,
+  isFuncEntityContext,
+  StmtContextType,
 } from 'src/parser/common/entityCollector';
 import { EntityContextType } from 'src/parser/common/types';
-import { MySQL, MySqlEntityCollector, MysqlSplitListener } from 'src/parser/mysql';
+import {
+  MySQL,
+  MySqlEntityCollector,
+  MysqlSplitListener,
+} from 'src/parser/mysql';
 
 const commonSql = fs.readFileSync(path.join(__dirname, 'fixtures', 'common.sql'), 'utf-8');
 
