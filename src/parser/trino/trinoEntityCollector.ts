@@ -1,4 +1,7 @@
-import type {
+import type { TrinoSqlListener } from '../../lib/trino/TrinoSqlListener';
+import {
+    AliasedRelationContext,
+    ColumnDefinitionContext,
     ColumnNameCreateContext,
     CreateMaterializedViewContext,
     CreateSchemaContext,
@@ -9,15 +12,15 @@ import type {
     QueryStatementContext,
     SchemaNameContext,
     SchemaNameCreateContext,
+    SelectItemContext,
     SingleStatementContext,
     TableNameContext,
     TableNameCreateContext,
     ViewNameContext,
     ViewNameCreateContext,
 } from '../../lib/trino/TrinoSqlParser';
-import type { TrinoSqlListener } from '../../lib/trino/TrinoSqlListener';
+import { AttrName, EntityCollector, StmtContextType } from '../common/entityCollector';
 import { EntityContextType } from '../common/types';
-import { StmtContextType, EntityCollector } from '../common/entityCollector';
 
 export class TrinoEntityCollector extends EntityCollector implements TrinoSqlListener {
     /** ====== Entity Begin */
@@ -30,11 +33,24 @@ export class TrinoEntityCollector extends EntityCollector implements TrinoSqlLis
     }
 
     exitTableName(ctx: TableNameContext) {
-        this.pushEntity(ctx, EntityContextType.TABLE);
+        const needCollectAttr = this.getRootStmt()?.stmtContextType === StmtContextType.SELECT_STMT;
+        this.pushEntity(
+            ctx,
+            EntityContextType.TABLE,
+            needCollectAttr
+                ? {
+                      attrNameList: [AttrName.alias],
+                      endContextList: [SelectItemContext.name, AliasedRelationContext.name],
+                  }
+                : undefined
+        );
     }
 
     exitTableNameCreate(ctx: TableNameCreateContext) {
-        this.pushEntity(ctx, EntityContextType.TABLE_CREATE);
+        this.pushEntity(ctx, EntityContextType.TABLE_CREATE, {
+            attrNameList: [AttrName.comment],
+            endContextList: [CreateTableContext.name, CreateTableAsSelectContext.name],
+        });
     }
 
     exitViewName(ctx: ViewNameContext) {
@@ -42,11 +58,17 @@ export class TrinoEntityCollector extends EntityCollector implements TrinoSqlLis
     }
 
     exitViewNameCreate(ctx: ViewNameCreateContext) {
-        this.pushEntity(ctx, EntityContextType.VIEW_CREATE);
+        this.pushEntity(ctx, EntityContextType.VIEW_CREATE, {
+            attrNameList: [AttrName.comment],
+            endContextList: [CreateMaterializedViewContext.name, CreateViewContext.name],
+        });
     }
 
     exitColumnNameCreate(ctx: ColumnNameCreateContext) {
-        this.pushEntity(ctx, EntityContextType.COLUMN_CREATE);
+        this.pushEntity(ctx, EntityContextType.COLUMN_CREATE, {
+            attrNameList: [AttrName.comment, AttrName.colType],
+            endContextList: [ColumnDefinitionContext.name],
+        });
     }
 
     /** ===== Statement begin */
