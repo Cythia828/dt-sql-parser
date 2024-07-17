@@ -12,7 +12,6 @@ import {
     QueryStatementContext,
     SchemaNameContext,
     SchemaNameCreateContext,
-    SelectItemContext,
     SingleStatementContext,
     TableNameContext,
     TableNameCreateContext,
@@ -40,7 +39,7 @@ export class TrinoEntityCollector extends EntityCollector implements TrinoSqlLis
             needCollectAttr
                 ? {
                       attrNameList: [AttrName.alias],
-                      endContextList: [SelectItemContext.name, AliasedRelationContext.name],
+                      endContextList: [AliasedRelationContext.name],
                   }
                 : undefined
         );
