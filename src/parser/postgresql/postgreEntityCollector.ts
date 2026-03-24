@@ -30,6 +30,7 @@ import {
     type ViewNameContext,
     type ViewNameCreateContext,
     TargetListContext,
+    Target_emptyContext,
     SelectNoParensContext,
     XmlTableContext,
     FuncTableContext,
@@ -165,6 +166,31 @@ export class PostgreSqlEntityCollector extends EntityCollector implements Postgr
         this.pushEntity(ctx, EntityContextType.COLUMN, [], {
             declareType: ColumnDeclareType.ALL,
         });
+    }
+
+    exitTarget_empty(ctx: Target_emptyContext) {
+        // Create QUERY_RESULT entity for empty column in SELECT list
+        const stmt = this._stmtStack.peek();
+        if (!stmt) return;
+
+        const emptyEntity: any = {
+            entityContextType: EntityContextType.QUERY_RESULT,
+            text: '',
+            position: {
+                startTokenIndex: ctx.start?.tokenIndex ?? -1,
+                endTokenIndex: ctx.stop?.tokenIndex ?? -1,
+                line: ctx.start?.line ?? 1,
+                startColumn: ctx.start?.charPositionInLine ?? 0,
+                endColumn: ctx.stop?.charPositionInLine ?? 0,
+            },
+            belongStmt: stmt,
+            declareType: undefined,
+            _comment: null,
+            relatedEntities: null,
+            columns: null,
+            _alias: null,
+        };
+        this._entityStack.push(emptyEntity);
     }
 
     exitSelectExpressionColumnName(ctx: SelectExpressionColumnNameContext) {

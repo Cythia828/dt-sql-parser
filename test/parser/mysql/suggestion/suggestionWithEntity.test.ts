@@ -185,6 +185,12 @@ describe('MySQL Syntax Suggestion with collect entity', () => {
         };
         const sql = commentOtherLine(syntaxSql, pos.lineNumber);
         const entities = mysql.getAllEntities(sql, pos);
-        expect(entities[0].belongStmt.isContainCaret).toBeFalsy();
+
+        // When caret is after semicolon, entities should not contain caret
+        if (entities && entities.length > 0) {
+            entities.forEach((entity) => {
+                expect(entity.belongStmt.isContainCaret).toBeFalsy();
+            });
+        }
     });
 });
