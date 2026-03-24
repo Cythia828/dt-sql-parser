@@ -2733,7 +2733,6 @@ columnName
 
 columnNamePath
     : colId optIndirection
-    | {this.shouldMatchEmpty()}? (colId DOT emptyColumn | emptyColumn)
     ;
 
 columnNameCreate
